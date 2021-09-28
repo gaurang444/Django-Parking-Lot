@@ -127,8 +127,10 @@ def exit_booking_complete(request):
     booking_obj.save()
     rate_card_obj.save()
     parking_lot_obj.save()
+    res['booking']=booking_obj
     return HttpResponse(json.dumps(res), content_type='application/json')
 
+@csrf_exempt
 def find_parking_history_by_vehicle(request):
     res={}
     #this will be a get method for query searching
@@ -149,6 +151,14 @@ def find_parking_history_by_vehicle(request):
     return HttpResponse(json.dumps(res), content_type='application/json')
 
 
-
-
-    
+@csrf_exempt
+def download_all_bookings(request):
+    db_all=Booking.objects.all()
+    response = HttpResponse(content_type='text/csv')
+    filename = u"BOOKING_DATA_EXPORT " + " " + str(timezone.now()) + ".csv"
+    response['Content-Disposition'] = u'attachment; filename="{0}"'.format(filename)
+    writer = csv.writer(response)
+    writer.writerow(['parking_lot_entry_time','parking_lot_exit_time','spot_used','vehicle_used','booking_created_at','pricing'])
+    for obj in db_all:
+        writer.writerow([obj.parking_lot_entry_time,obj.parking_lot_exit_time,obj.spot_used, obj.vehicle_used, obj.booking_created_at, obj.pricing])
+    return response
